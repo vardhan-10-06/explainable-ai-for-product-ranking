@@ -3,6 +3,7 @@ __pycache__/
 .venv/
 venv/
 data/raw/
+amazon-runtime*.zip
 data/processed/*.csv
 results/*.pkl
 results/*.png

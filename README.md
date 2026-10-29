@@ -75,6 +75,45 @@ cp .env.example .env   # fill in a real JWT_SECRET_KEY
 docker-compose up --build
 ```
 
+### Deploy to Render
+
+The project includes a Render Blueprint in `render.yaml` for the FastAPI backend
+and Streamlit dashboard. The deployment uses the Amazon runtime slice documented
+below (about 36 MB; 5,000 users and approximately 44,000 interactions), rather
+than the full multi-gigabyte research import. The raw dataset is not stored in
+this repository.
+
+1. Create a ZIP containing the four CSV files from
+   `data/raw/ucsd_electronics_runtime/`:
+
+   ```powershell
+   Compress-Archive -Path .\data\raw\ucsd_electronics_runtime\*.csv `
+     -DestinationPath .\amazon-runtime.zip -Force
+   ```
+
+2. Upload `amazon-runtime.zip` to a **private** object-storage bucket. Create a
+   signed HTTPS download URL that remains valid until the backend's first start.
+   The ZIP should contain `users.csv`, `products.csv`, `interactions.csv`, and
+   `reviews.csv` together in one directory. Do not commit the ZIP or signed URL.
+
+3. In the Render dashboard, create a Blueprint instance from this GitHub
+   repository and branch `main`. When prompted, set `AMAZON_RUNTIME_DATA_URL` to
+   the signed URL. Render generates `JWT_SECRET_KEY` and provisions a persistent
+   disk for the database, downloaded dataset, and trained model.
+
+4. Wait for the backend's first deploy to finish. It downloads and validates the
+   dataset, trains the model once, and reports healthy at `/health`. The
+   dashboard's `API_BASE_URL` is linked to the backend by the Blueprint.
+
+Keep the object private. The signed URL is a secret: enter it only in Render's
+environment-variable form, never in source control or chat. Once the files are
+on the persistent disk, the service reuses them on restarts; if that disk is
+deleted, provide a new valid signed URL before redeploying. Training and
+persistent storage use paid Render resources; check
+[Render's current pricing](https://render.com/pricing) before creating the
+Blueprint. The backend requires a persistent disk and a paid instance so model
+training and database/data files survive restarts.
+
 ### Run from VS Code
 
 Open the repository root folder in VS Code, select **Rankwise: Run app** in

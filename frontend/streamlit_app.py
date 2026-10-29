@@ -10,7 +10,9 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
-API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000").rstrip("/")
+API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000").strip().rstrip("/")
+if API_BASE_URL and "://" not in API_BASE_URL:
+    API_BASE_URL = f"https://{API_BASE_URL}"
 
 st.set_page_config(
     page_title="Rankwise | Explainable Product Intelligence",

@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: rankwise-api
+    runtime: docker
+    plan: standard
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: sh deployment/start_backend.sh
+    healthCheckPath: /health
+    disk:
+      name: rankwise-persistent-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: CONFIG_PATH
+        value: /app/deployment/render-config.yaml
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: AMAZON_RUNTIME_DATA_URL
+        sync: false
+
+  - type: web
+    name: rankwise-dashboard
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: sh deployment/start_dashboard.sh
+    envVars:
+      - key: API_BASE_URL
+        fromService:
+          type: web
+          name: rankwise-api
+          property: host
