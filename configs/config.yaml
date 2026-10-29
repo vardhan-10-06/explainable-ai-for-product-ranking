@@ -1,0 +1,104 @@
+# =============================================================================
+# Central configuration for the Explainable AI Product Ranking system.
+# Every module reads its parameters from here instead of hardcoding values.
+# =============================================================================
+
+project:
+  name: "xai-product-ranking"
+  seed: 42
+  log_level: "INFO"
+
+data:
+  dataset: "flipkart"               # one of: amazon | flipkart | retailrocket | movielens | yelp
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  min_interactions_per_user: 3
+  min_interactions_per_item: 1
+
+features:
+  embedding_dim: 8
+  use_graph_features: true
+  use_review_text_features: false
+  temporal_decay_halflife_days: 30
+
+knowledge_graph:
+  backend: "networkx"               # "networkx" (default, no external service) or "neo4j"
+  neo4j:
+    uri: "bolt://localhost:7687"
+    user: "neo4j"
+    password: "changeme"
+  embedding_dim: 8
+  node2vec_walk_length: 8
+  node2vec_num_walks: 2
+
+ranking:
+  models:
+    lightgbm:
+      enabled: true
+      objective: "lambdarank"
+      num_leaves: 63
+      learning_rate: 0.05
+      n_estimators: 300
+    xgboost:
+      enabled: true
+      objective: "rank:pairwise"
+      max_depth: 6
+      learning_rate: 0.05
+      n_estimators: 300
+    neural_ranker:
+      enabled: true
+      hidden_dims: [128, 64, 32]
+      dropout: 0.2
+      epochs: 15
+      batch_size: 256
+      lr: 0.001
+  ensemble:
+    strategy: "weighted"            # "weighted" | "rank_average" | "stacking"
+    weights:
+      lightgbm: 0.4
+      xgboost: 0.35
+      neural_ranker: 0.25
+
+explainability:
+  shap:
+    background_samples: 40
+    max_display_features: 10
+    kernel_nsamples: 40
+  local_explanation_top_k: 5
+
+llm:
+  provider: "template"              # "template" (offline, deterministic) | "openai_compatible"
+  openai_compatible:
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4o-mini"
+    api_key_env: "LLM_API_KEY"
+  temperature: 0.2
+  max_tokens: 300
+
+hallucination_detection:
+  min_confidence_to_pass: 0.6
+  fact_match_threshold: 0.5
+
+evaluation:
+  k_values: [5, 10, 20]
+  bootstrap_iterations: 200
+
+ecs:
+  weights:
+    feature_importance: 0.25
+    kg_evidence: 0.25
+    llm_confidence: 0.2
+    fact_verification: 0.2
+    explanation_consistency: 0.1
+
+backend:
+  host: "0.0.0.0"
+  port: 8000
+  secret_key_env: "JWT_SECRET_KEY"
+  access_token_expire_minutes: 60
+
+database:
+  url: "sqlite:///./database/app.db"   # swap for postgresql://user:pass@host/db in production

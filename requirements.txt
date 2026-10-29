@@ -1,0 +1,42 @@
+# Core
+numpy>=1.24
+pandas>=2.0
+scikit-learn>=1.3
+scipy>=1.10
+
+# Ranking models
+lightgbm>=4.0
+xgboost>=2.0
+torch>=2.1
+
+# Explainability
+shap>=0.44
+
+# Knowledge graph
+networkx>=3.1
+neo4j>=5.14          # optional: only needed if NEO4J_ENABLED=true
+
+# LLM / embeddings
+sentence-transformers>=2.2
+transformers>=4.35
+requests>=2.31
+
+# Backend
+fastapi>=0.109
+uvicorn[standard]>=0.27
+pydantic>=2.5
+python-jose[cryptography]>=3.3
+passlib[bcrypt]>=1.7
+sqlalchemy>=2.0
+
+# Frontend
+streamlit>=1.31
+plotly>=5.18
+
+# Utils
+pyyaml>=6.0
+python-dotenv>=1.0
+matplotlib>=3.8
+tqdm>=4.66
+pytest>=8.0
+httpx>=0.26

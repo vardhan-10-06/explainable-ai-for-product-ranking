@@ -1,0 +1,69 @@
+# =============================================================================
+# docker-compose.yml
+# Orchestrates the full stack: FastAPI backend, Streamlit frontend, and
+# (optional) Neo4j graph database. Postgres is provided commented-out as an
+# alternative to the default SQLite (see configs/config.yaml database.url).
+# =============================================================================
+version: "3.9"
+
+services:
+  backend:
+    build: .
+    container_name: xai-ranking-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - CONFIG_PATH=/app/configs/config.yaml
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-change-me-in-production}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+      - ./database:/app/database
+    command: >
+      sh -c "
+      python -m data.sample_data_generator --output-dir data/raw &&
+      python -m ranking.train &&
+      uvicorn backend.app:app --host 0.0.0.0 --port 8000
+      "
+    depends_on:
+      - neo4j
+
+  frontend:
+    build: .
+    container_name: xai-ranking-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - API_BASE_URL=http://backend:8000
+    command: streamlit run frontend/streamlit_app.py --server.address 0.0.0.0 --server.port 8501
+    depends_on:
+      - backend
+
+  neo4j:
+    image: neo4j:5.14
+    container_name: xai-ranking-neo4j
+    ports:
+      - "7474:7474"   # browser UI
+      - "7687:7687"   # bolt protocol
+    environment:
+      - NEO4J_AUTH=neo4j/changeme
+    volumes:
+      - neo4j_data:/data
+
+  # Uncomment to use PostgreSQL instead of the default SQLite:
+  # postgres:
+  #   image: postgres:16
+  #   container_name: xai-ranking-postgres
+  #   environment:
+  #     - POSTGRES_USER=xai
+  #     - POSTGRES_PASSWORD=xai
+  #     - POSTGRES_DB=xai_ranking
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  neo4j_data:
+  # postgres_data:

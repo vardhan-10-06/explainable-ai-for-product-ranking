@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+data/raw/
+data/processed/*.csv
+results/*.pkl
+results/*.png
+results/*.json
+results/**/*.pkl
+results/**/*.png
+results/**/*.json
+database/*.db
+.env
+*.egg-info/
+.pytest_cache/
